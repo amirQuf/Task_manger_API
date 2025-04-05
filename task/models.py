@@ -1,5 +1,5 @@
 from django.db import models
-from user.models import user 
+from django.contrib.auth.models import User
 
 class Task(models.Model):
     priority_CHOICES =[
@@ -14,9 +14,9 @@ class Task(models.Model):
     completed = models.BooleanField(default=False)
     due_date = models.DateField(null=True, blank=True)
     priority = models.PositiveIntegerField(default=1 ,choices=priority_CHOICES)
-    sub_tasks = models.ForeignKey(self,on_delete=models.SET_NULL , null=True , blank=True )
-    # assigned_to = models.ForeignKey(user, related_name="assigned_tasks", on_delete=models.CASCADE, null=True, blank=True)
-    # creator = models.ForeignKey(user, on_delete=models.CASCADE)
+    sub_tasks = models.ForeignKey('self',on_delete=models.SET_NULL , null=True , blank=True )
+    assigned_to = models.ForeignKey(User, related_name="assigned_tasks", on_delete=models.CASCADE, null=True, blank=True)
+    creator = models.ForeignKey(User, on_delete=models.CASCADE)
     class Meta:
         ordering = ["-priority", "-due_date", "-created_at"]
     def __str__(self):
@@ -29,7 +29,7 @@ class Note(models.Model):
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self):
-        return self.name
+        return self.title
     class Meta:
         ordering = ["-created_at"]
 
@@ -39,16 +39,16 @@ class Attachment(models.Model):
     file = models.FileField(upload_to='attachments/')
     title = models.CharField(max_length=200, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
-    user = models.ForeignKey(user, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self):
-        return self.file.name
+        return self.file.title
     class Meta:
         ordering = ["-created_at"]
 
 class Comment(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
-    user = models.ForeignKey(user, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self):
@@ -57,7 +57,7 @@ class Comment(models.Model):
 
 class Board(models.Model):
     name = models.CharField(max_length=200)
-    users = models.ManyToManyField(user)
+    users = models.ManyToManyField(User)
     created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self):
         return self.name
@@ -78,6 +78,6 @@ class Column(models.Model):
 
 class Workspace(models.Model):
     name = models.CharField(max_length=200)
-    users = models.ManyToManyField(user)
+    users = models.ManyToManyField(User)
     boards = models.ManyToManyField(Board)
     created_at = models.DateTimeField(auto_now_add=True)
